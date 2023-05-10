@@ -2,48 +2,66 @@
     <el-form :model="queryForm" label-width="120px" ref="ruleFormRef">
 
         <el-row>
+
             <el-col :span="8">
                 <el-form-item label="用户名" prop="userName">
                     <el-input v-model="queryForm.userName" />
                 </el-form-item>
             </el-col>
+
             <el-col :span="8">
-                <el-form-item label="手机号" prop="phoneNumber">
+                <el-form-item label="考试名称" prop="phoneNumber">
                     <el-input v-model="queryForm.phoneNumber" />
                 </el-form-item>
             </el-col>
 
-            <el-col :span="8">
-                <el-form-item label="年龄" prop="age">
-                    <el-slider class="w-full" v-model="ageSlider" range show-stops :min="10" :max="30" />
-                </el-form-item>
-            </el-col>
         </el-row>
 
         <el-row>
             <el-col :span="8">
-                <el-form-item label="民族" prop="nation">
-
+                <el-form-item label="语文" prop="nation">
                     <el-select v-model="queryForm.nation" class="w-full">
                         <el-option label="全部" :value="''"></el-option>
-                        <el-option v-for="(nation, index) of nations" :key="index" :label="nation" :value="nation">
+                        <el-option v-for="(grades, index) of gradesSelect" :key="index" :label="grades.label"
+                            :value="grades.value">
                         </el-option>
                     </el-select>
                 </el-form-item>
             </el-col>
+
             <el-col :span="8">
-                <el-form-item label="邮箱" prop="email">
-                    <el-input v-model="queryForm.email" />
+                <el-form-item label="数学" prop="nation">
+                    <el-select v-model="queryForm.nation" class="w-full">
+                        <el-option label="全部" :value="''"></el-option>
+                        <el-option v-for="(grades, index) of gradesSelect" :key="index" :label="grades.label"
+                            :value="grades.value">
+                        </el-option>
+                    </el-select>
                 </el-form-item>
             </el-col>
 
             <el-col :span="8">
-                <el-form-item label="地址" prop="address">
-                    <el-input v-model="queryForm.address" />
+                <el-form-item label="英语" prop="nation">
+                    <el-select v-model="queryForm.nation" class="w-full">
+                        <el-option label="全部" :value="''"></el-option>
+                        <el-option v-for="(grades, index) of gradesSelect" :key="index" :label="grades.label"
+                            :value="grades.value">
+                        </el-option>
+                    </el-select>
                 </el-form-item>
             </el-col>
         </el-row>
+        <el-row>
 
+            <el-col :span="8">
+                <el-form-item prop="class" label="按照班级查询">
+                    <el-select v-model="queryForm.class" class="w-full" placeholder="请选择班级">
+                        <el-option v-for="(className, index) of classes" :key="index" :label="className" :value="className">
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+            </el-col>
+        </el-row>
 
         <el-row>
             <el-col>
@@ -86,41 +104,47 @@
             v-model:page-size="queryForm.pageSize" @current-change="fetchAllStudent" :total="count" />
     </el-card>
 
-    <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加学生' : '修改学生'">
+    <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加学生成绩' : '修改学生成绩'">
         <el-form :model="form" ref="dialogForm" label-width="80px" size="large">
 
             <el-form-item label="用户名" prop="userName" required>
-                <el-input v-model="form.userName" autocomplete="off" />
+                <el-input v-model="form.userName" autocomplete="off">
+                    <template #append>
+                        <el-button type="primary">关联学生</el-button>
+                    </template>
+                </el-input>
             </el-form-item>
 
-            <el-form-item label="年龄" prop="age">
-                <el-input v-model="form.age" autocomplete="off" />
-            </el-form-item>
-
+            <!-- 自动带出来年级 -->
             <el-form-item label="性别" prop="phoneNumber">
-                <el-select v-model="form.sex" placeholder="请选择性别" style="width:100%">
-                    <el-option label="男" value="0" />
-                    <el-option label="女" value="1" />
+                <el-select v-model="form.sex" placeholder="请选择性别" style="width:100%" disabled>
+                    <el-option label="男" value="1" />
+                    <el-option label="女" value="0" />
                 </el-select>
             </el-form-item>
 
-            <el-form-item label="手机号" prop="phoneNumber">
-                <el-input v-model="form.phoneNumber" autocomplete="off" />
+
+            <el-form-item prop="class" label="班级">
+                <el-select v-model="form.class" class="w-full" placeholder="请选择班级" disabled>
+                    <el-option v-for="(className, index) of classes" :key="index" :label="className" :value="className">
+                    </el-option>
+                </el-select>
             </el-form-item>
 
-            <el-form-item label="邮箱" prop="phoneNumber">
+            <el-form-item label="考试名称" prop="phoneNumber">
                 <el-input v-model="form.email" autocomplete="off" />
             </el-form-item>
 
-            <el-form-item label="地址" prop="address">
+            <el-form-item label="语文成绩" prop="address">
                 <el-input v-model="form.address" autocomplete="off" />
             </el-form-item>
 
-            <el-form-item label="民族" prop="age">
-                <el-select v-model="form.nation" class="w-full">
-                    <el-option v-for="(nation, index) of nations" :key="index" :label="nation" :value="nation">
-                    </el-option>
-                </el-select>
+            <el-form-item label="数学成绩" prop="address">
+                <el-input v-model="form.address" autocomplete="off" />
+            </el-form-item>
+
+            <el-form-item label="英语成绩" prop="address">
+                <el-input v-model="form.address" autocomplete="off" />
             </el-form-item>
 
         </el-form>
@@ -137,9 +161,10 @@
   
 <script lang="ts" setup>
 import axios from "axios";
-import { reactive, ref, toRaw } from "vue";
+import { reactive, ref, toRaw, watch } from "vue";
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { addGrades, search } from "@/axios/student";
 const ruleFormRef = ref<FormInstance>()
 const dialogForm = ref<FormInstance>()
 const dialogFormVisible = ref(false)
@@ -151,31 +176,69 @@ const form = reactive({
     phoneNumber: "18623806693",
     email: "2939117014@qq.com",
     address: "",
+    class: "",
+    studyStartTime: "",
 })
 const ageSlider = ref([10, 30])
 const type = ref('add')
+
+const gradesSelect = ref([
+    {
+        label: "不及格",
+        value: 0
+    },
+    {
+        label: "良好",
+        value: 1
+    }, {
+        label: "优秀",
+        value: 2
+    }
+])
+
 
 const queryForm = reactive({
     userName: "",
     sex: '1',
     nation: "",
+    class: "",
     phoneNumber: "",
     email: "",
     address: "",
     pageSize: 2,
     currentPage: 1,
+    startTime: '',
+    endTime: ""
+
 })
 const tableData = ref([])
 const count = ref(0)
 
-const nations = ref([])
-axios.get("http://localhost:3000/chineseNationService").then(res => {
+
+
+axios.get("http://localhost:3000/chineseNation").then(res => {
     if (res.data.code == 200) {
         nations.value = res.data.data
     }
 })
 
 
+
+const date = ref('')
+const nations = ref([])
+axios.get("http://localhost:3000/chineseNation").then(res => {
+    if (res.data.code == 200) {
+        nations.value = res.data.data
+    }
+})
+
+const classes = ref([])
+
+axios.get("http://localhost:3000/classes").then(res => {
+    if (res.data.code == 200) {
+        classes.value = res.data.data
+    }
+})
 
 const add = () => {
     dialogFormVisible.value = true;
@@ -233,27 +296,46 @@ const fetchAddStudent = () => {
     })
 }
 
+watch(date, function (newVal) {
+    if (newVal) {
+        queryForm.startTime = newVal[0]
+        queryForm.endTime = newVal[1]
+    } else {
+        queryForm.startTime = ''
+        queryForm.endTime = ''
+    }
+})
+
 const fetchAllStudent = () => {
-    axios({
-        method: "post",
-        data: {
-            ...queryForm,
-            startAge: ageSlider.value[0],
-            endAge: ageSlider.value[1]
-        },
-        url: "http://localhost:3000/students/search",
+
+    addGrades({
+        studentId: "6458fe61e3a1d0db055b8217",
+        testName: "第一次",
+        chineseGrades: 50,
+        mathGrades: 50,
+        englishGrades: 50,
     }).then(res => {
-        const data = res.data.data
+        console.log(res)
+    })
+    
+    search({
+        ...queryForm,
+        startAge: ageSlider.value[0],
+        endAge: ageSlider.value[1]
+    }).then((res: any) => {
+        const data = res.data
         tableData.value = data.data;
         count.value = data.count
     })
 }
 fetchAllStudent()
 
+
+
 const reset = () => {
     if (!ruleFormRef.value) return
     ruleFormRef.value.resetFields()
-    ageSlider.value = [10,30];
+    ageSlider.value = [10, 30];
     fetchAllStudent()
 }
 const del = (row: any) => {
@@ -276,4 +358,10 @@ const del = (row: any) => {
         })
 }
 
+
 </script>
+<style>
+.studyStartTime {
+    @apply w-full !important
+}
+</style>

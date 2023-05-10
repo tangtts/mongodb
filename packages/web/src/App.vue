@@ -1,17 +1,18 @@
 
-
-
 <template>
-  <header>
-      <StudentPage/>
-  </header>
-
+  <div class="h-screen">
+    <el-container class="h-full">
+      <el-aside width="200px">
+        <Side/>
+      </el-aside>
+      <el-container>
+        <el-main>
+          <RouterView/>
+        </el-main>
+      </el-container>
+    </el-container>
+  </div>
 </template>
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import StudentPage from './components/student/index.vue'
+<script lang="ts" setup>
+  import Side from "./components/side/index.vue"
 </script>
-
-<style scoped>
-
-</style>
