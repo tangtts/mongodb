@@ -1,3 +1,4 @@
+import { classes } from "./../commonData/classes";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import mongoose, {
@@ -22,21 +23,136 @@ export class ClassesService {
     return s.save();
   }
 
-  search() {
+  async search() {
     // 查询班级名称，老师名称，学科
-    // 学生名称 
+    // 学生名称
+    // class 中 有 chineseTeacher，mathTeacher，englishTeacher
+    // teacher 中有一个
+    function getTeacherLookupAndSetStage(teacherFieldName: string): PipelineStage[] {
+      return [
+        {
+          $lookup: {
+            from: "teachers",
+            let: { teacherId: `$${teacherFieldName}` },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $eq: ["$_id", "$$teacherId"],
+                  },
+                },
+              },
+              {
+                $project: {
+                  _id: 0,
+                },
+              },
+            ],
+            as: teacherFieldName,
+          },
+        },
+        {
+          // 为 null 制成 []
+          $set: {
+            [teacherFieldName]: { $ifNull: [{ $first: `$${teacherFieldName}` }, {}] },
+          },
+        },
+      ];
+    }
+    const pipeLine: PipelineStage[] = [
+      ...getTeacherLookupAndSetStage("chineseTeacher"),
+      ...getTeacherLookupAndSetStage("mathTeacher"),
+      ...getTeacherLookupAndSetStage("englishTeacher"),
+    ];
+    // const pipeLine: PipelineStage[] = [
+    //   {
+    //     $lookup: {
+    //       from: "teachers",
+    //       let: { chineseTeacherId: "$chineseTeacher" },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $eq: ["$_id", "$$chineseTeacherId"],
+    //             },
+    //           },
+    //         },
+    //       ],
+    //       as: "chineseTeacher",
+    //     },
+    //   },
+    //   {
+    //     $set: {
+    //       chineseTeacher: { $ifNull: [{ $first: "$chineseTeacher" }, []] },
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "teachers",
+    //       let: { mathTeacherId: "$mathTeacher" },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $eq: ["$_id", "$$mathTeacherId"],
+    //             },
+    //           },
+    //         },
+    //         {
+    //           $project: {
+    //             _id: 0,
+    //           },
+    //         },
+    //       ],
+    //       as: "mathTeacher",
+    //     },
+    //   },
+    //   {
+    //     $set: {
+    //       mathTeacher: { $ifNull: [{ $first: "$mathTeacher" }, []] },
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: "teachers",
+    //       let: { englishTeacherId: "$englishTeacher" },
+    //       pipeline: [
+    //         {
+    //           $match: {
+    //             $expr: {
+    //               $eq: ["$_id", "$$englishTeacherId"],
+    //             },
+    //           },
+    //         },
+    //         {
+    //           $project: {
+    //             _id: 0,
+    //           },
+    //         },
+    //       ],
+    //       as: "englishTeacher",
+    //     },
+    //   },
+    //   {
+    //     $set: {
+    //       englishTeacher: { $ifNull: [{ $first: "$englishTeacher" }, []] },
+    //     },
+    //   },
+    // ];
+    let r = await this.classModel.aggregate(pipeLine);
+    console.log(r);
     return this.classModel.find({});
   }
 
   /**
    * @description 对老师进行分类
-   * @return {*} 
+   * @return {*}
    * @memberof ClassesService
    */
-  async teachers():Promise<{
-    chineseTeachers:Teacher[],
-    mathTeachers:Teacher[],
-    englishTeachers:Teacher[],
+  async teachers(): Promise<{
+    chineseTeachers: Teacher[];
+    mathTeachers: Teacher[];
+    englishTeachers: Teacher[];
   }> {
     let pipeLine: PipelineStage[] = [
       {
@@ -73,18 +189,6 @@ export class ClassesService {
       },
     ];
     let teachers = await this.teacherModel.aggregate(pipeLine);
-    // let chineseTeachers = [], mathTeachers = [], englishTeachers = []
-    // let r1 = await this.teacherModel.find({})
-    // r1.forEach(item => {
-    //   if (item.project == "0") {
-    //     chineseTeachers.push(item)
-    //   } else if (item.project == '1') {
-    //     mathTeachers.push(item)
-    //   } else if (item.project == '2') {
-    //     englishTeachers.push(item)
-    //   }
-    // })
-
     return teachers[0];
   }
 

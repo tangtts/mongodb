@@ -8,16 +8,16 @@ export class Class {
     @Prop({type:String})
     className:string
 
-    @Prop({type:mongoose.Types.ObjectId})
+    @Prop({type:mongoose.Schema.Types.ObjectId})
     chineseTeacher: ObjectId
 
-    @Prop({type:mongoose.Types.ObjectId})
+    @Prop({type:mongoose.Schema.Types.ObjectId})
     mathTeacher: ObjectId
 
-    @Prop({type:mongoose.Types.ObjectId})
+    @Prop({type:mongoose.Schema.Types.ObjectId})
     englishTeacher: ObjectId
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId})
+    @Prop({ type: [mongoose.Schema.Types.ObjectId]})
     studentIds: ObjectId[];
 }
 export const ClassSchema = SchemaFactory.createForClass(Class);
