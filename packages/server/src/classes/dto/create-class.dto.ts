@@ -15,6 +15,7 @@ export class CreateClassDto {
     description: "班级名称",
   })
   @IsString()
+  @IsNotEmpty({message:"缺少班级名称"})
   className: string;
 
   @ApiProperty({

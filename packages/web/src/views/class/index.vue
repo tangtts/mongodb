@@ -1,6 +1,6 @@
 <template>
     <el-form :model="queryForm" label-width="120px" ref="ruleFormRef">
-        
+
         <!-- 一个老师对应多个班级,一个班级对应多个老师 -->
         <el-row>
             <el-col :span="8">
@@ -13,7 +13,7 @@
                 </el-form-item>
             </el-col>
 
-           
+
         </el-row>
 
         <el-row>
@@ -35,9 +35,23 @@
 
         <el-table :data="classTableData" border empty empty-text="暂无数据">
             <el-table-column prop="className" label="班级名称" />
-            <el-table-column prop="chineseTeacher" label="语文老师" />
-            <el-table-column prop="mathTeacher" label="数学老师" />
-            <el-table-column prop="englishTeacher" label="英语老师" />
+            <el-table-column prop="chineseTeacher" label="语文老师">
+                <template #default="scope">
+                    {{ scope.row.chineseTeacher.userName }}
+                </template>
+            </el-table-column>
+            <el-table-column prop="mathTeacher" label="数学老师">
+                <template #default="scope">
+                    {{ scope.row.mathTeacher.userName }}
+                </template>
+            </el-table-column>
+
+            <el-table-column prop="englishTeacher" label="英语老师">
+                <template #default="scope">
+                    {{ scope.row.englishTeacher.userName }}
+                </template>
+            </el-table-column>
+
             <el-table-column fixed="right" label="操作">
                 <template #default="scope">
                     <el-button link type="primary" size="small" @click="edit(scope.row)">编辑</el-button>
@@ -46,21 +60,20 @@
             </el-table-column>
         </el-table>
 
+
         <el-pagination class="mt-4" background layout="prev, pager, next" v-model:current-page="queryForm.currentPage"
             v-model:page-size="queryForm.pageSize" @current-change="fetchAllClasses" :total="count" />
     </el-card>
 
-    <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加教师' : '修改教师'">
+    <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加教室' : '修改教室'">
         <el-form :model="form" ref="dialogForm" label-width="80px" size="large">
 
-            <el-form-item prop="class" label="班级">
+            <el-form-item prop="className" label="班级">
                 <el-select v-model="form.className" class="w-full" placeholder="请选择班级">
                     <el-option v-for="(className, index) of classes" :key="index" :label="className" :value="className">
                     </el-option>
                 </el-select>
             </el-form-item>
-
-
 
             <el-form-item label="关联学生" prop="userName" required>
                 <el-input :value="chooseStudents.map(i => i.userName).join(',')" disabled autocomplete="off">
@@ -70,27 +83,21 @@
                 </el-input>
             </el-form-item>
 
-            <el-form-item label="语文老师" prop="age">
+            <el-form-item label="语文老师" prop="chineseTeacher">
                 <el-select v-model="form.chineseTeacher" placeholder="请选择老师" style="width:100%">
-                    <el-option  v-for="teacher of teachers.chineseTeachers" 
-                    :label="teacher.userName"
-                    :value="teacher._id" />
+                    <el-option v-for="teacher of teachers.chineseTeachers" :label="teacher.userName" :value="teacher._id" />
                 </el-select>
             </el-form-item>
 
-            <el-form-item label="数学老师" prop="age">
+            <el-form-item label="数学老师" prop="mathTeacher">
                 <el-select v-model="form.mathTeacher" placeholder="请选择老师" style="width:100%">
-                    <el-option  v-for="teacher of teachers.mathTeachers" 
-                    :label="teacher.userName"
-                    :value="teacher._id" />
+                    <el-option v-for="teacher of teachers.mathTeachers" :label="teacher.userName" :value="teacher._id" />
                 </el-select>
             </el-form-item>
 
-            <el-form-item label="英语老师" prop="age">
+            <el-form-item label="英语老师" prop="englishTeacher">
                 <el-select v-model="form.englishTeacher" placeholder="请选择老师" style="width:100%">
-                    <el-option  v-for="teacher of teachers.englishTeachers" 
-                    :label="teacher.userName"
-                    :value="teacher._id" />
+                    <el-option v-for="teacher of teachers.englishTeachers" :label="teacher.userName" :value="teacher._id" />
                 </el-select>
             </el-form-item>
         </el-form>
@@ -105,8 +112,7 @@
     </el-dialog>
 
     <!-- 关联学生 -->
-    <el-dialog v-model="dialogStudentFormVisible">
-
+    <el-dialog v-model="dialogStudentFormVisible" title="关联学生">
         <el-table :data="studentsTable" border empty empty-text="暂无数据" @selection-change="handleSelectionChange">
             <el-table-column type="selection" width="55" />
             <el-table-column prop="userName" label="名称" />
@@ -142,6 +148,7 @@ const form = reactive({
     className: "",
     mathTeacher: "",
     englishTeacher: "",
+    studentIds: []
 })
 const ageSlider = ref([20, 70])
 const type = ref('add')
@@ -162,14 +169,14 @@ const queryForm = reactive({
 })
 
 const studentsTable = ref([])
-axios.post("http://localhost:3000/students/search").then(res=>{
-    console.log(res.data.data)
-    studentsTable.value = res.data.data.data
+axios.post("http://localhost:3000/students/search").then(res => {
+    studentsTable.value = res.data.data.data;
+
 })
 const classTableData = ref([])
 const confirmConnect = () => {
     dialogStudentFormVisible.value = false
-    // form.studentIds = (chooseStudents.value.map(student => student._id) as any)
+    form.studentIds = (chooseStudents.value.map(student => student._id) as any)
 }
 const chooseStudents = ref<any[]>([])
 const handleSelectionChange = (e: any) => {
@@ -185,17 +192,17 @@ axios({
 })
 
 const teachers = reactive<{
-    chineseTeachers:any[],
-    englishTeachers:any[],
-    mathTeachers:any[],
+    chineseTeachers: any[],
+    englishTeachers: any[],
+    mathTeachers: any[],
 }>({
-    chineseTeachers:[],
-    englishTeachers:[],
-    mathTeachers:[],
+    chineseTeachers: [],
+    englishTeachers: [],
+    mathTeachers: [],
 })
-axios.get("http://localhost:3000/classes/teachers").then(res=>{
+axios.get("http://localhost:3000/classes/teachers").then(res => {
     console.log(res.data)
-    if(res.data.code == 200){
+    if (res.data.code == 200) {
         teachers.chineseTeachers = res.data.data.chineseTeachers
         teachers.englishTeachers = res.data.data.englishTeachers
         teachers.mathTeachers = res.data.data.mathTeachers
@@ -223,7 +230,9 @@ axios.get("http://localhost:3000/classes").then(res => {
 const add = () => {
     dialogFormVisible.value = true;
     type.value = 'add';
+    chooseStudents.value = []
     dialogForm.value?.resetFields()
+
 }
 
 const edit = (row: any) => {
@@ -231,10 +240,12 @@ const edit = (row: any) => {
     type.value = 'edit';
     dialogForm.value?.resetFields()
     axios({
-        url: `http://localhost:3000/teachers/details?id=${row._id}`,
+        url: `http://localhost:3000/classes/details?id=${row._id}`,
     }).then(res => {
         if (res.data.code == 200) {
             Object.assign(form, res.data.data)
+            chooseStudents.value = res.data.data.students
+
         }
     })
 }
@@ -252,7 +263,7 @@ const fetchUpdateStudent = () => {
     axios({
         method: "post",
         data: form,
-        url: "http://localhost:3000/teachers/update",
+        url: "http://localhost:3000/classes/update",
     }).then(res => {
         if (res.data.code == 200) {
             dialogFormVisible.value = false;
@@ -267,7 +278,7 @@ const fetchAddStudent = () => {
     axios({
         method: "post",
         data: form,
-        url: "http://localhost:3000/teachers/add",
+        url: "http://localhost:3000/classes/add",
     }).then(res => {
         if (res.data.code == 200) {
             dialogFormVisible.value = false;
@@ -319,7 +330,7 @@ const del = (row: any) => {
         .then(() => {
             axios({
                 method: "get",
-                url: `http://localhost:3000/teachers/remove?id=${row._id}`,
+                url: `http://localhost:3000/classes/remove?id=${row._id}`,
             }).then(res => {
                 fetchAllClasses()
             })

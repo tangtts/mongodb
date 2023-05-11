@@ -45,10 +45,11 @@
         </el-row>
 
         <el-row>
-
             <el-col :span="8">
-                <el-form-item prop="class" label="班级">
-                    <el-select v-model="queryForm.class" class="w-full" placeholder="请选择班级">
+                <el-form-item prop="className" label="班级">
+                    <el-select v-model="queryForm.className" class="w-full" placeholder="请选择班级">
+                        <el-option  label="全部" value="">
+                        </el-option>
                         <el-option v-for="(className, index) of classes" :key="index" :label="className" :value="className">
                         </el-option>
                     </el-select>
@@ -57,13 +58,10 @@
 
             <el-col :span="16">
                 <el-form-item prop="class" label="入学时间">
-
                     <el-date-picker v-model="date" type="daterange" range-separator="To" start-placeholder="开始时间"
                         end-placeholder="结束时间" />
                 </el-form-item>
             </el-col>
-
-
         </el-row>
 
         <el-row>
@@ -103,17 +101,15 @@
             </el-table-column>
         </el-table>
 
-        <el-pagination class="mt-4" background layout="prev, pager, next" v-model:current-page="queryForm.currentPage"
-            v-model:page-size="queryForm.pageSize" @current-change="fetchAllStudent" :total="count" />
+        <el-pagination class="mt-4" background layout="prev, pager, next"
+         v-model:current-page="queryForm.currentPage"
+            v-model:page-size="queryForm.pageSize" 
+            @current-change="fetchAllStudent"
+             :total="count" />
     </el-card>
-
-
-
-
 
     <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加学生' : '修改学生'">
         <el-form :model="form" ref="dialogForm" label-width="80px" size="large">
-
 
             <el-form-item label="用户名" prop="userName" required>
                 <el-input v-model="form.userName" autocomplete="off" />
@@ -142,14 +138,10 @@
                 </el-select>
             </el-form-item>
 
-
-
             <el-form-item prop="studyStartTime" label="入学时间">
                 <el-date-picker class="studyStartTime" v-model="form.studyStartTime" type="date" range-separator="To"
                     placeholder="入学时间" />
             </el-form-item>
-
-
 
             <el-form-item label="邮箱" prop="phoneNumber">
                 <el-input v-model="form.email" autocomplete="off" />
@@ -184,30 +176,39 @@ import { reactive, ref, toRaw, watch } from "vue";
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { search } from "@/axios/student";
+import Mock from "mockjs"
 const ruleFormRef = ref<FormInstance>()
 const dialogForm = ref<FormInstance>()
 const dialogFormVisible = ref(false)
-const form = reactive({
-    userName: "",
-    age: '',
-    sex: '1',
-    nation: "汉族",
-    phoneNumber: "18623806693",
-    email: "2939117014@qq.com",
-    address: "",
-    class: "",
-    studyStartTime: "",
-})
+
+
+const nations = ref([])
+
+function createForm() {
+    return ({
+        userName: Mock.mock('@cname'),
+        age: Mock.mock('@integer(10, 30)'),
+        sex: Mock.mock('@pick(["0", "1"])'),
+        nation: Mock.mock(`@pick(["汉族","藏族","白族"])`),
+        phoneNumber: Mock.mock('@string("0123456789", 11)'),
+        email: Mock.mock('@email'),
+        address: Mock.mock("@city(true)"),
+        class: "",
+        studyStartTime: Mock.mock("@date(yyyy-MM-dd)")
+    })
+}
+
+
+let form = reactive(createForm())
+
 const ageSlider = ref([10, 30])
 const type = ref('add')
-
-
 
 const queryForm = reactive({
     userName: "",
     sex: '1',
     nation: "",
-    class: "",
+    className: "",
     phoneNumber: "",
     email: "",
     address: "",
@@ -215,12 +216,9 @@ const queryForm = reactive({
     currentPage: 1,
     startTime: '',
     endTime: ""
-
 })
 const tableData = ref([])
 const count = ref(0)
-
-
 
 axios.get("http://localhost:3000/chineseNation").then(res => {
     if (res.data.code == 200) {
@@ -228,10 +226,7 @@ axios.get("http://localhost:3000/chineseNation").then(res => {
     }
 })
 
-
-
 const date = ref('')
-const nations = ref([])
 axios.get("http://localhost:3000/chineseNation").then(res => {
     if (res.data.code == 200) {
         nations.value = res.data.data
@@ -250,6 +245,7 @@ const add = () => {
     dialogFormVisible.value = true;
     type.value = 'add';
     dialogForm.value?.resetFields()
+    form = reactive(createForm())
 }
 
 const edit = (row: any) => {

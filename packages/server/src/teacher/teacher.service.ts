@@ -1,11 +1,12 @@
-import { UpdateTeacherDTO } from './dtos/update-teacher.dto';
+import { ClassName } from "./../commonData/classes";
+import { UpdateTeacherDTO } from "./dtos/update-teacher.dto";
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { Model, PipelineStage } from "mongoose";
 import { JwtService } from "@nestjs/jwt";
 import { Student } from "../student/schema/student.schema";
 import { CreateStudentDTO } from "../student/dtos/create-student.dto";
@@ -13,22 +14,20 @@ import { SearchStudentDTO } from "../student/dtos/search-student.dto";
 import { UpdateStudentDTO } from "../student/dtos/update-student.dto";
 import { CreateTeacherDTO } from "./dtos/create-teacher.dto";
 import { SearchTeacherDTO } from "./dtos/search-teacher.dto";
-import { Teacher } from './schema/teacher.schema';
+import { Teacher } from "./schema/teacher.schema";
 @Injectable()
 export class TeacherService {
   constructor(
-    @InjectModel(Teacher.name) private teacherModel: Model<Teacher>,
+    @InjectModel(Teacher.name) private teacherModel: Model<Teacher>
   ) {}
 
   async create(teacher: CreateTeacherDTO) {
     // 根据 手机号,名字 是否存在
     // TODO 可以存在
-    console.log(teacher)
     const isExit = await this.teacherModel.findOne({
       phoneNumber: teacher.phoneNumber,
       userName: teacher.userName,
     });
-    console.log(isExit);
     let s = new this.teacherModel(teacher);
     return s.save();
   }
@@ -87,9 +86,55 @@ export class TeacherService {
       skip: searchTeacher.pageSize * (searchTeacher.currentPage - 1),
       sort: { createAt: 1 },
     });
+
+    // teaches 中 有 class 字符串数组
+    // calss 中有 className 字符串
+    // 想使用 teacher 的 class 匹配 className
+
+    const pipeLine: PipelineStage[] = [
+      {
+        $match: query,
+      },
+      {
+        $lookup: {
+          from: "students",
+          as: "students",
+          let: { teacherClass: "$class" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $in: ["$class", "$$teacherClass"],
+                },
+              },
+            },
+          ],
+        },
+      },
+      {
+        $set: {
+          students: { $ifNull: ["$students", []] },
+          // 计算 students 的长度
+          studentCount:{$size:"$students"}
+        },
+      },
+      {
+        $sort: { createdAt: 1 },
+      },
+      // 这个有顺序要求
+      {
+        $skip: searchTeacher.pageSize * (searchTeacher.currentPage - 1),
+      },
+      {
+        $limit: searchTeacher.pageSize,
+      },
+    ];
+
+    let data = await this.teacherModel.aggregate(pipeLine);
+
     const count = await this.teacherModel.countDocuments(query);
     return {
-      data: teachers,
+      data,
       count,
     };
   }
@@ -100,11 +145,14 @@ export class TeacherService {
    * @returns
    */
   async getTeacherById(id: string): Promise<Teacher> {
-    const teacher = await this.teacherModel.findOne( {_id:id} ,{
-      createdAt:0,
-    });
-    if(!teacher){
-      throw new NotFoundException("没有找到此教师")
+    const teacher = await this.teacherModel.findOne(
+      { _id: id },
+      {
+        createdAt: 0,
+      }
+    );
+    if (!teacher) {
+      throw new NotFoundException("没有找到此教师");
     }
     return teacher;
   }
@@ -134,8 +182,8 @@ export class TeacherService {
    */
   async remove(id: string) {
     let r = await this.teacherModel.findByIdAndRemove(id);
-    if(!r){
-      throw new NotFoundException("没有找到此教师")
+    if (!r) {
+      throw new NotFoundException("没有找到此教师");
     }
     return;
   }

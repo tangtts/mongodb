@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import { ApiOperation, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
@@ -18,22 +18,38 @@ export class ClassesController {
     return this.classesService.create(createClassDto);
   }
 
+  @ApiOperation({
+    summary:"查询所有班级"
+  })
   @Post("search")
   search() {
     return this.classesService.search();
   }
 
-
   @ApiOperation({
-    summary:"老师分类"
+    summary:"分类老师"
   })
   @Get("teachers")
-  update() {
+  teachers() {
     return this.classesService.teachers();
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.classesService.remove(+id);
+  @ApiOperation({
+    summary:"班级详情"
+  })
+  @Get("details")
+  getClassById(@Query("id") id: string) {
+    return this.classesService.getClassById(id);
+  }
+
+  @Post('update')
+  update(@Body() updateClassDto:UpdateClassDto) {
+    return this.classesService.update(updateClassDto);
+  }
+
+
+  @Get('remove')
+  remove(@Query('id') id: string) {
+    return this.classesService.remove(id);
   }
 }

@@ -56,6 +56,10 @@ export class Teacher extends Common {
   @Prop()
   startJobTime: number;
 
+  // 地址
+  @Prop()
+  address: string;
+
   @Prop()
   email: string;
 

@@ -26,7 +26,6 @@ export class StudentService {
       phoneNumber: student.phoneNumber,
       userName: student.userName,
     });
-    console.log(isExit,student);
 
     let s = new this.studentModel(student);
     return s.save();
@@ -53,6 +52,9 @@ export class StudentService {
       ...(searchStudent.email && {
         email: { $regex: searchStudent.email, $options: "i" },
       }),
+      ...(searchStudent.className && {
+        class: { $regex: searchStudent.className, $options: "i" },
+      }),
       ...(searchStudent.nation && {
         nation: { $regex: searchStudent.nation, $options: "i" },
       }),
@@ -65,14 +67,12 @@ export class StudentService {
         studyStartTime: {$lte:searchStudent.endTime,$gte:searchStudent.startTime },
       }),
     };
-
     const students = await this.studentModel.find(query, null, {
       limit: searchStudent.pageSize,
-      skip: searchStudent.pageSize * (searchStudent.currentPage - 1),
-      sort: { createAt: 1 },
+      skip: searchStudent.pageSize  * (searchStudent.currentPage - 1),
+      sort: { createAt: 1 }
     });
     const count =await this.studentModel.countDocuments(query)
-
     return {
       data:students,
       count

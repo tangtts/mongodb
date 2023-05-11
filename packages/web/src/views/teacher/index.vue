@@ -38,7 +38,7 @@
             </el-col>
 
             <el-col :span="8">
-                <el-form-item label="性别" prop="address">
+                <el-form-item label="性别" prop="sex">
                     <el-select v-model="queryForm.sex" class="w-full">
                         <el-option label="全部" :value="''"></el-option>
                         <el-option label="男" value="1">
@@ -63,7 +63,7 @@
             </el-col>
 
             <el-col :span="8">
-                <el-form-item prop="class" label="毕业院校">
+                <el-form-item prop="school" label="毕业院校">
                     <el-input v-model="queryForm.school" />
                 </el-form-item>
             </el-col>
@@ -101,18 +101,18 @@
                     {{ scope.row.class.join(',') }}
                 </template>
             </el-table-column>
-
             <el-table-column prop="age" label="年龄" />
+            <el-table-column prop="school" label="毕业院校" />
             <el-table-column prop="project" label="学科">
                 <template #default="scope">
-                    <span v-for="(project,index) of projects" :key="index">
+                    <span v-for="(project, index) of projects" :key="index">
                         <span v-if="project.value == scope.row.project">
-                            {{project.label}}
+                            {{ project.label }}
                         </span>
                     </span>
                 </template>
-                
-                </el-table-column>
+
+            </el-table-column>
             <el-table-column prop="sex" label="性别">
                 <template #default="scope">
                     {{ scope.row.sex == 1 ? '男' : '女' }}
@@ -121,7 +121,13 @@
             <el-table-column prop="nation" label="民族" />
             <el-table-column prop="phoneNumber" label="手机号" />
             <el-table-column prop="email" label="邮箱" />
+
             <el-table-column prop="address" label="地址" />
+            <el-table-column prop="studentCount" label="学生人数">
+                <template #default="scope">
+                    <el-link type="primary" @click="seeStudents(scope.row)">{{ scope.row.studentCount }} </el-link>
+                </template>
+            </el-table-column>
             <el-table-column fixed="right" label="操作">
                 <template #default="scope">
                     <el-button link type="primary" size="small" @click="edit(scope.row)">编辑</el-button>
@@ -148,14 +154,6 @@
                 </el-upload>
             </el-form-item>
 
-
-            <!-- <el-form-item label="关联学生" prop="userName" required>
-                <el-input :value="chooseStudents.map(i => i.userName).join(',')" disabled autocomplete="off">
-                    <template #append>
-                        <el-button @click="dialogStudentFormVisible = true">关联学生</el-button>
-                    </template>
-                </el-input>
-            </el-form-item> -->
 
             <el-form-item label="用户名" prop="userName" required>
                 <el-input v-model="form.userName" autocomplete="off" />
@@ -185,9 +183,9 @@
             </el-form-item>
 
             <el-form-item prop="class" label="学科">
-                <el-select v-model="form.project"  class="w-full" placeholder="请选择学科">
-                    <el-option v-for="(project, index) of projects" 
-                    :key="index" :label="project.label" :value="project.value">
+                <el-select v-model="form.project" class="w-full" placeholder="请选择学科">
+                    <el-option v-for="(project, index) of projects" :key="index" :label="project.label"
+                        :value="project.value">
                     </el-option>
                 </el-select>
             </el-form-item>
@@ -201,7 +199,6 @@
                 <el-date-picker class="studyStartTime" v-model="form.startJobTime" type="date" range-separator="To"
                     placeholder="入职时间" />
             </el-form-item>
-
 
 
             <el-form-item label="邮箱" prop="email">
@@ -230,10 +227,11 @@
         </template>
     </el-dialog>
 
-    <el-dialog v-model="dialogStudentFormVisible">
 
-        <el-table :data="studentTableData" border empty empty-text="暂无数据" @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55" />
+
+    <el-dialog v-model="studentsDialog" title="学生信息">
+
+        <el-table :data="studentsTable" border empty empty-text="暂无数据">
             <el-table-column prop="userName" label="用户名" />
             <el-table-column prop="age" label="年龄" />
             <el-table-column prop="sex" label="性别">
@@ -245,10 +243,7 @@
         </el-table>
         <template #footer>
             <span class="dialog-footer">
-                <el-button @click="dialogStudentFormVisible = false">Cancel</el-button>
-                <el-button type="primary" @click="confirmConnect">
-                    Confirm
-                </el-button>
+                <el-button @click="studentsDialog = false">关闭</el-button>
             </span>
         </template>
     </el-dialog>
@@ -261,24 +256,32 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import type { UploadProps } from 'element-plus'
+import Mock from "mockjs"
 const ruleFormRef = ref<FormInstance>()
 const dialogForm = ref<FormInstance>()
 const dialogFormVisible = ref(false)
-const dialogStudentFormVisible = ref(false)
-const form = reactive({
-    userName: "",
-    age: '',
-    sex: '1',
-    nation: "汉族",
-    phoneNumber: "18623806693",
-    email: "2939117014@qq.com",
-    address: "",
-    class: [],
-    startJobTime: "", // 入职时间
-    school: "",
-    avatar: "",
-    project:"" // 学科
-})
+
+
+function createForm() {
+    return ({
+        userName: Mock.mock('@cname'),
+        age: Mock.mock('@integer(20, 60)'),
+        sex: Mock.mock('@pick(["0", "1"])'),
+        nation: Mock.mock(`@pick(["汉族","藏族","白族","回族"])`),
+        phoneNumber: Mock.mock('@string("0123456789", 11)'),
+        email: Mock.mock('@email'),
+        address: Mock.mock("@city(true)"),
+        class: [],
+        project: Mock.mock(`@pick(["0","1","2"])`),
+        school: Mock.mock('@ctitle()学校'),
+        startJobTime: Mock.mock("@date(yyyy-MM-dd)"),
+        avatar: Mock.mock('@image("400x300", "#FF6666")')
+    })
+}
+
+
+
+let form = reactive(createForm())
 const ageSlider = ref([20, 70])
 const type = ref('add')
 
@@ -297,15 +300,16 @@ const queryForm = reactive({
     school: ""
 })
 
-const studentTableData = ref([])
-const confirmConnect = () => {
-    dialogStudentFormVisible.value = false
-    // form.studentIds = (chooseStudents.value.map(student => student._id) as any)
+const studentsDialog = ref(false)
+const studentsTable = ref<any[]>([])
+const seeStudents = (students: any) => {
+    studentsDialog.value = true;
+    studentsTable.value = students.students
 }
-const chooseStudents = ref<any[]>([])
-const handleSelectionChange = (e: any) => {
-    chooseStudents.value = e
-}
+
+const teacherTableData = ref([])
+
+
 
 const projects = ref<any[]>([])
 axios({
@@ -327,7 +331,7 @@ axios({
     url: "http://localhost:3000/students/search",
 }).then(res => {
     const data = res.data.data
-    studentTableData.value = data.data;
+    teacherTableData.value = data.data;
 })
 
 
@@ -368,6 +372,7 @@ const add = () => {
     dialogFormVisible.value = true;
     type.value = 'add';
     dialogForm.value?.resetFields()
+    form = reactive(createForm())
 }
 
 const edit = (row: any) => {
@@ -445,11 +450,22 @@ const fetchAllStudent = () => {
     })
 }
 fetchAllStudent()
+watch(date, function (newVal) {
+    if (newVal) {
+        queryForm.startTime = newVal[0] || ''
+        queryForm.endTime = newVal[1] || ''
+    } else {
+        queryForm.startTime = ''
+        queryForm.endTime = ''
+    }
+})
 
 const reset = () => {
     if (!ruleFormRef.value) return
     ruleFormRef.value.resetFields()
     ageSlider.value = [20, 70];
+    queryForm.startTime = ''
+    queryForm.endTime = ''
     fetchAllStudent()
 }
 const del = (row: any) => {
@@ -479,8 +495,8 @@ const del = (row: any) => {
 }
 
 .avatar {
-   @apply  w-[100px]  h-[100px];
-   border: 1px dashed var(--el-border-color);
+    @apply w-[100px] h-[100px];
+    border: 1px dashed var(--el-border-color);
 }
 </style>
 <style>

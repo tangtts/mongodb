@@ -6,6 +6,7 @@ import { classes } from './commonData/classes';
 import { nations } from './commonData/nations';
 import { UploadDTO } from './dto/upload.dto';
 import { UploadService } from './service/upload.service';
+import { projects } from './commonData/project';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService,
@@ -24,20 +25,7 @@ export class AppController {
 
   @Get('/project')
   project(){
-    return  [
-      {
-        label:"语文",
-        value:0
-      },
-      {
-        label:"数学",
-        value:1
-      },
-      {
-        label:"英语",
-        value:2
-      },
-    ];
+    return projects
   }
 
   @ApiOperation({
@@ -51,7 +39,6 @@ export class AppController {
     @Body() uploadDTO: UploadDTO,
     @UploadedFile() file
   ) {
-    // console.log(req.file,"fa",uploadDTO.name)
     return await this.appService.uploadAvatar(file);
   }
 }

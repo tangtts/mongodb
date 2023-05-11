@@ -1,12 +1,7 @@
 import { classes } from "./../commonData/classes";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import mongoose, {
-  isValidObjectId,
-  Model,
-  PipelineStage,
-  Types,
-} from "mongoose";
+import { isValidObjectId, Model, PipelineStage, Schema, Types } from "mongoose";
 import { Teacher } from "src/teacher/schema/teacher.schema";
 import { CreateClassDto } from "./dto/create-class.dto";
 import { UpdateClassDto } from "./dto/update-class.dto";
@@ -28,7 +23,9 @@ export class ClassesService {
     // 学生名称
     // class 中 有 chineseTeacher，mathTeacher，englishTeacher
     // teacher 中有一个
-    function getTeacherLookupAndSetStage(teacherFieldName: string): PipelineStage[] {
+    function getTeacherLookupAndSetStage(
+      teacherFieldName: string
+    ): PipelineStage[] {
       return [
         {
           $lookup: {
@@ -52,9 +49,11 @@ export class ClassesService {
           },
         },
         {
-          // 为 null 制成 []
+          // 为 null 制成 {}
           $set: {
-            [teacherFieldName]: { $ifNull: [{ $first: `$${teacherFieldName}` }, {}] },
+            [teacherFieldName]: {
+              $ifNull: [{ $first: `$${teacherFieldName}` }, {}],
+            },
           },
         },
       ];
@@ -64,84 +63,8 @@ export class ClassesService {
       ...getTeacherLookupAndSetStage("mathTeacher"),
       ...getTeacherLookupAndSetStage("englishTeacher"),
     ];
-    // const pipeLine: PipelineStage[] = [
-    //   {
-    //     $lookup: {
-    //       from: "teachers",
-    //       let: { chineseTeacherId: "$chineseTeacher" },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             $expr: {
-    //               $eq: ["$_id", "$$chineseTeacherId"],
-    //             },
-    //           },
-    //         },
-    //       ],
-    //       as: "chineseTeacher",
-    //     },
-    //   },
-    //   {
-    //     $set: {
-    //       chineseTeacher: { $ifNull: [{ $first: "$chineseTeacher" }, []] },
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "teachers",
-    //       let: { mathTeacherId: "$mathTeacher" },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             $expr: {
-    //               $eq: ["$_id", "$$mathTeacherId"],
-    //             },
-    //           },
-    //         },
-    //         {
-    //           $project: {
-    //             _id: 0,
-    //           },
-    //         },
-    //       ],
-    //       as: "mathTeacher",
-    //     },
-    //   },
-    //   {
-    //     $set: {
-    //       mathTeacher: { $ifNull: [{ $first: "$mathTeacher" }, []] },
-    //     },
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: "teachers",
-    //       let: { englishTeacherId: "$englishTeacher" },
-    //       pipeline: [
-    //         {
-    //           $match: {
-    //             $expr: {
-    //               $eq: ["$_id", "$$englishTeacherId"],
-    //             },
-    //           },
-    //         },
-    //         {
-    //           $project: {
-    //             _id: 0,
-    //           },
-    //         },
-    //       ],
-    //       as: "englishTeacher",
-    //     },
-    //   },
-    //   {
-    //     $set: {
-    //       englishTeacher: { $ifNull: [{ $first: "$englishTeacher" }, []] },
-    //     },
-    //   },
-    // ];
     let r = await this.classModel.aggregate(pipeLine);
-    console.log(r);
-    return this.classModel.find({});
+    return r;
   }
 
   /**
@@ -161,13 +84,6 @@ export class ClassesService {
             {
               $match: {
                 project: "0",
-              },
-            },
-            {
-              $project: {
-                createdAt: 0,
-                updatedAt: 0,
-                nation: 0,
               },
             },
           ],
@@ -192,11 +108,40 @@ export class ClassesService {
     return teachers[0];
   }
 
-  update(id: number, updateClassDto: UpdateClassDto) {
-    return `This action updates a #${id} class`;
+  async getClassById(id: string) {
+    // classes 有一个 studentsId 数组，包含 studentId
+    let pipeLine: PipelineStage[] = [
+      {
+        $match: {
+          _id: new Types.ObjectId(id),
+        },
+      },
+      {
+        $lookup: {
+          from: "students",
+          as: "students",
+          //  studentIds 是一个数组
+          localField: "studentIds",
+          foreignField: "_id",
+        },
+      },
+      {
+        $project: {
+          studentIds: 0,
+        },
+      },
+    ];
+    let r2 = await this.classModel.aggregate(pipeLine);
+    return r2[0];
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} class`;
+  async remove(id: string) {
+    await this.classModel.findByIdAndRemove(id);
+    return;
+  }
+
+  async update(updateClassDto:UpdateClassDto){
+    await this.classModel.findByIdAndUpdate(updateClassDto._id,updateClassDto);
+    return 
   }
 }

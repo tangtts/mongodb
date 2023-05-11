@@ -105,7 +105,6 @@ export class UserService {
   }
 
   private async certificate(user: User) {
-    console.log(user, "u")
     const payload = {
       id: user._id,
     };

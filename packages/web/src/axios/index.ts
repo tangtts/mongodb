@@ -44,7 +44,6 @@ export function get(url: string, params: object) {
  * @param {Object} params [请求时携带的参数] 
  */
 export function post(url: string, params: object) {
-    console.log(params)
     return new Promise((resolve, reject) => {
         axios.post(url, params)
             .then(res => {

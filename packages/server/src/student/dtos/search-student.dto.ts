@@ -1,3 +1,4 @@
+import { ClassName } from './../../commonData/classes';
 import { ApiProperty } from "@nestjs/swagger";
 import { IsArray, IsDate, IsEmail, isEnum, IsEnum, IsNotEmpty, IsNumber, IsObject, IsOptional, IsPhoneNumber, isString, IsString, Length, ValidateNested } from "class-validator";
 import { Transform, Type } from "class-transformer";
@@ -41,7 +42,9 @@ export class SearchStudentDTO extends PageDTO {
     @Transform(({ value }) => new Date(value).getTime())
     endTime: number;
 
-
+    @IsString()
+    @IsOptional()
+    className:string
 
     @ApiProperty({ example: "2939117014", description: '邮箱' })
     @IsString()

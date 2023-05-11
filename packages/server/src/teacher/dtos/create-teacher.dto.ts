@@ -76,6 +76,16 @@ export class CreateTeacherDTO {
   @IsOptional()
   address: string;
 
+
+  @ApiProperty({
+    example: "xx学校",
+    description: "毕业院校",
+  })
+  @IsString()
+  @IsOptional()
+  school: string;
+  
+
   @ApiProperty({ example: new Date(), description: "入职时间" })
   @IsNotEmpty()
   @IsOptional()
