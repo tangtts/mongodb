@@ -15,7 +15,7 @@ export type TeacherDocument = HydratedDocument<Teacher>;
 
 
 function isClassValid(values: string[]) {
-  return values.every(value=>classes.includes(value))
+  return values.every(value=>classes.includes(value as ClassName))
 }
 
 function isNationNameValid(values:string) {

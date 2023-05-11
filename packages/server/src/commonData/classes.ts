@@ -8,7 +8,7 @@ export const classes = [
     "初三一班",
     "初三二班",
     "初三三班",
-]
+] as const
 
 
 export type ClassNameTuple  = typeof classes;

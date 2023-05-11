@@ -6,7 +6,6 @@ import { StudentController } from "./student.controller";
 import { StudentService } from "./student.service";
 import { Student, StudentSchema } from "./schema/student.schema";
 import { TeacherController } from "../teacher/teacher.controller";
-import { GradesService } from './grades.service';
 import { Grade } from 'src/grades/schemas/grade.schema';
 import { GradesSchema } from './schema/grades.schema';
 
@@ -18,6 +17,6 @@ import { GradesSchema } from './schema/grades.schema';
     ]),
   ],
   controllers: [StudentController],
-  providers: [StudentService,GradesService],
+  providers: [StudentService],
 })
 export class StudentModule {}

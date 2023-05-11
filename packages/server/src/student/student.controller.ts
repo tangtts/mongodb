@@ -1,3 +1,4 @@
+import { search } from './../../../web/src/axios/student/index';
 import {
   Body,
   Controller,
@@ -16,34 +17,19 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import { CreateGradeDto } from "src/grades/dto/create-grade.dto";
 import { AuthGuard } from "src/guard/auth.guard";
-import { CreateGradesDTO } from "./dtos/create-grades.dto";
 import { CreateStudentDTO } from "./dtos/create-student.dto";
+import { SearchGradesDTO } from "../grades/dto/search-grades.dto";
 import { SearchStudentDTO } from "./dtos/search-student.dto";
 import { UpdateStudentDTO } from "./dtos/update-student.dto";
-import { GradesService } from "./grades.service";
-import { StudentService } from './student.service';
+import { StudentService } from "./student.service";
 
 @ApiTags("学生模块")
 @Controller("students")
 export class StudentController {
   constructor(
     private readonly studentService: StudentService,
-    private readonly gradesService: GradesService
-    ) {}
-
-
-
-  @ApiOperation({
-    summary: "增加一个学生成绩",
-  })
- 
-  @Post("addGrades")
-  addStudentGrades(@Body() grades: CreateGradesDTO) {
-    return this.gradesService.create(grades);
-  }
-
+  ) {}
 
   @ApiOperation({
     summary: "新增学生",
@@ -91,13 +77,9 @@ export class StudentController {
     example: "644f3fb6ef72cc8a71b15d14",
   })
   @Get("remove")
-  remove(@Query('id') id: string) {
+  remove(@Query("id") id: string) {
     return this.studentService.remove(id);
   }
-
-
-
-
 
 
 

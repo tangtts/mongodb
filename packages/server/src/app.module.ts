@@ -10,15 +10,12 @@ import { TeacherModule } from './teacher/teacher.module';
 import { ClassesModule } from './classes/classes.module';
 @Module({
   imports: [
-    // MongooseModule.forRoot('mongodb://localhost/test', {
-    //   connectionName: 'cats',
-    // }),
     MongooseModule.forRoot('mongodb://localhost/school'),
     UserModule,
     StudentModule,
     TeacherModule,
+    ClassesModule,
     GradesModule,
-    ClassesModule
   ],
   controllers: [AppController],
   providers: [AppService,UploadService],

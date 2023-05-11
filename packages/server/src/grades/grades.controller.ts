@@ -1,34 +1,29 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
 import { GradesService } from './grades.service';
-import { CreateGradeDto } from './dto/create-grade.dto';
 import { UpdateGradeDto } from './dto/update-grade.dto';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+import { SearchGradesDTO } from 'src/grades/dto/search-grades.dto';
+
+import { CreateGradesDTO } from './dto/create-grade.dto';
+@ApiTags("成绩模块")
 @Controller('grades')
 export class GradesController {
   constructor(private readonly gradesService: GradesService) {}
 
-  @Post()
-  create(@Body() createGradeDto: CreateGradeDto) {
-    return this.gradesService.create(createGradeDto);
+  @ApiOperation({
+    summary: "增加一个学生成绩",
+  })
+  @Post("add")
+  addStudentGrade(@Body() grades: CreateGradesDTO) {
+    return this.gradesService.create(grades);
   }
 
-  @Get()
-  findAll() {
-    return this.gradesService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.gradesService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateGradeDto: UpdateGradeDto) {
-    return this.gradesService.update(+id, updateGradeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.gradesService.remove(+id);
+  @ApiOperation({
+    summary: "查询学生成绩",
+  })
+  @Post("search")
+  searchGrade(@Body() grades: SearchGradesDTO) {
+    return this.gradesService.search(grades);
   }
 }

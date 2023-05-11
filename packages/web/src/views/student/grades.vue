@@ -1,8 +1,6 @@
 <template>
     <el-form :model="queryForm" label-width="120px" ref="ruleFormRef">
-
         <el-row>
-
             <el-col :span="8">
                 <el-form-item label="用户名" prop="userName">
                     <el-input v-model="queryForm.userName" />
@@ -14,7 +12,6 @@
                     <el-input v-model="queryForm.phoneNumber" />
                 </el-form-item>
             </el-col>
-
         </el-row>
 
         <el-row>
@@ -107,17 +104,18 @@
     <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加学生成绩' : '修改学生成绩'">
         <el-form :model="form" ref="dialogForm" label-width="80px" size="large">
 
-            <el-form-item label="用户名" prop="userName" required>
-                <el-input v-model="form.userName" autocomplete="off">
+            <el-form-item label="用户名" prop="student.userName" required>
+                <el-input disabled 
+                v-model="form.student.userName" autocomplete="off">
                     <template #append>
-                        <el-button type="primary">关联学生</el-button>
+                        <el-button type="primary" @click="dialogStudentFormVisible = true">关联学生</el-button>
                     </template>
                 </el-input>
             </el-form-item>
 
             <!-- 自动带出来年级 -->
             <el-form-item label="性别" prop="phoneNumber">
-                <el-select v-model="form.sex" placeholder="请选择性别" style="width:100%" disabled>
+                <el-select v-model="form.student.sex" placeholder="请选择性别" style="width:100%" disabled>
                     <el-option label="男" value="1" />
                     <el-option label="女" value="0" />
                 </el-select>
@@ -125,26 +123,26 @@
 
 
             <el-form-item prop="class" label="班级">
-                <el-select v-model="form.class" class="w-full" placeholder="请选择班级" disabled>
+                <el-select v-model="form.student.class" class="w-full" placeholder="请选择班级" disabled>
                     <el-option v-for="(className, index) of classes" :key="index" :label="className" :value="className">
                     </el-option>
                 </el-select>
             </el-form-item>
 
             <el-form-item label="考试名称" prop="phoneNumber">
-                <el-input v-model="form.email" autocomplete="off" />
+                <el-input v-model="form.testName" autocomplete="off" />
             </el-form-item>
 
-            <el-form-item label="语文成绩" prop="address">
-                <el-input v-model="form.address" autocomplete="off" />
+            <el-form-item label="语文成绩" prop="chineseGrades">
+                <el-input v-model="form.chineseGrade" autocomplete="off" />
             </el-form-item>
 
-            <el-form-item label="数学成绩" prop="address">
-                <el-input v-model="form.address" autocomplete="off" />
+            <el-form-item label="数学成绩" prop="mathGrades">
+                <el-input v-model="form.mathGrade" autocomplete="off" />
             </el-form-item>
 
-            <el-form-item label="英语成绩" prop="address">
-                <el-input v-model="form.address" autocomplete="off" />
+            <el-form-item label="英语成绩" prop="englishGrades">
+                <el-input v-model="form.englishGrade" autocomplete="off" />
             </el-form-item>
 
         </el-form>
@@ -152,6 +150,35 @@
             <span class="dialog-footer">
                 <el-button @click="dialogFormVisible = false">Cancel</el-button>
                 <el-button type="primary" @click="confirm">
+                    Confirm
+                </el-button>
+            </span>
+        </template>
+    </el-dialog>
+
+
+    <!-- 关联学生 -->
+    <el-dialog v-model="dialogStudentFormVisible" title="关联学生">
+        <el-table :data="studentsTable" border empty empty-text="暂无数据" 
+        @current-change="handleCurrentChange"
+        >
+        <el-table-column width="80" label="序号">
+                <template #default="scope">
+                    <el-radio v-model="radio" :label="scope.row._id">
+                    {{scope.$index}}
+                    </el-radio>
+                </template>
+            </el-table-column>
+            <el-table-column prop="userName" label="名称" />
+            <el-table-column prop="age" label="年龄" />
+            <el-table-column prop="nation" label="民族" />
+            <!-- <el-table-column prop="englishTeacher" label="语文平均分" /> -->
+            <!-- <el-table-column prop="englishTeacher" label="数学平均分" /> -->
+        </el-table>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="dialogStudentFormVisible = false">Cancel</el-button>
+                <el-button type="primary" @click="confirmConnect">
                     Confirm
                 </el-button>
             </span>
@@ -165,21 +192,52 @@ import { reactive, ref, toRaw, watch } from "vue";
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { addGrades, search } from "@/axios/student";
+import { ElTable } from 'element-plus'
+import Mock from "mockjs"
 const ruleFormRef = ref<FormInstance>()
 const dialogForm = ref<FormInstance>()
 const dialogFormVisible = ref(false)
-const form = reactive({
-    userName: "",
-    age: '',
-    sex: '1',
-    nation: "汉族",
-    phoneNumber: "18623806693",
-    email: "2939117014@qq.com",
-    address: "",
-    class: "",
-    studyStartTime: "",
+const dialogStudentFormVisible = ref(false)
+
+
+const createForm = ()=>{
+  return ({
+    student: {
+        userName:"",
+        sex:"",
+        class:"",
+        _id:""
+    },
+    studentId:"",
+    testName:Mock.mock('@word(3, 5)'),
+    chineseGrade:Mock.mock('@integer(0, 100)'),
+    mathGrade:Mock.mock('@integer(0, 100)'),
+    englishGrade:Mock.mock('@integer(0, 100)'),
+  })  
+}
+
+let form = reactive(createForm(),)
+
+const confirmConnect = () => {
+    dialogStudentFormVisible.value = false
+    form.student = currentRow.value
+    console.log(currentRow.value,"aa")
+}
+const studentsTable = ref([])
+axios.post("http://localhost:3000/students/search").then(res => {
+    studentsTable.value = res.data.data.data;
+
 })
-const ageSlider = ref([10, 30])
+
+const currentRow = ref()
+const handleCurrentChange = (val:any) => {
+    console.log(val)
+  currentRow.value = val
+  radio.value = val._id
+}
+
+
+
 const type = ref('add')
 
 const gradesSelect = ref([
@@ -213,7 +271,7 @@ const queryForm = reactive({
 })
 const tableData = ref([])
 const count = ref(0)
-
+const radio = ref("")
 
 
 axios.get("http://localhost:3000/chineseNation").then(res => {
@@ -243,6 +301,7 @@ axios.get("http://localhost:3000/classes").then(res => {
 const add = () => {
     dialogFormVisible.value = true;
     type.value = 'add';
+    form = reactive(createForm())
     dialogForm.value?.resetFields()
 }
 
@@ -284,10 +343,11 @@ const fetchUpdateStudent = () => {
 }
 
 const fetchAddStudent = () => {
+     form.studentId = form.student._id
     axios({
         method: "post",
         data: form,
-        url: "http://localhost:3000/students/add",
+        url: "http://localhost:3000/grades/add",
     }).then(res => {
         if (res.data.code == 200) {
             dialogFormVisible.value = false;
@@ -308,24 +368,16 @@ watch(date, function (newVal) {
 
 const fetchAllStudent = () => {
 
-    addGrades({
-        studentId: "6458fe61e3a1d0db055b8217",
-        testName: "第一次",
-        chineseGrades: 50,
-        mathGrades: 50,
-        englishGrades: 50,
+    axios({
+        method: "post",
+        data: queryForm,
+        url: "http://localhost:3000/grades/search",
     }).then(res => {
-        console.log(res)
-    })
-    
-    search({
-        ...queryForm,
-        startAge: ageSlider.value[0],
-        endAge: ageSlider.value[1]
-    }).then((res: any) => {
-        const data = res.data
+        if (res.data.code == 200) {
+            const data = res.data
         tableData.value = data.data;
         count.value = data.count
+        }
     })
 }
 fetchAllStudent()
@@ -335,7 +387,6 @@ fetchAllStudent()
 const reset = () => {
     if (!ruleFormRef.value) return
     ruleFormRef.value.resetFields()
-    ageSlider.value = [10, 30];
     fetchAllStudent()
 }
 const del = (row: any) => {
