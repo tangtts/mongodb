@@ -175,7 +175,7 @@ import axios from "axios";
 import { reactive, ref, toRaw, watch } from "vue";
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { search } from "@/axios/student";
+import { searchStudent } from "@/axios/student";
 import Mock from "mockjs"
 const ruleFormRef = ref<FormInstance>()
 const dialogForm = ref<FormInstance>()
@@ -309,7 +309,7 @@ watch(date, function (newVal) {
 })
 
 const fetchAllStudent = () => {
-    search({
+    searchStudent({
         ...queryForm,
         startAge: ageSlider.value[0],
         endAge: ageSlider.value[1]

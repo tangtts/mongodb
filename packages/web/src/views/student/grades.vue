@@ -9,7 +9,7 @@
 
             <el-col :span="8">
                 <el-form-item label="考试名称" prop="phoneNumber">
-                    <el-input v-model="queryForm.phoneNumber" />
+                    <el-input v-model="queryForm.testName" />
                 </el-form-item>
             </el-col>
         </el-row>
@@ -78,17 +78,20 @@
         </template>
 
         <el-table :data="tableData" border empty empty-text="暂无数据">
-            <el-table-column prop="userName" label="用户名" />
-            <el-table-column prop="age" label="年龄" />
-            <el-table-column prop="nation" label="民族" />
-            <el-table-column prop="sex" label="性别">
-                <template #default="scope">
-                    {{ scope.row.sex == 1 ? '男' : '女' }}
-                </template>
-            </el-table-column>
-            <el-table-column prop="phoneNumber" label="手机号" />
-            <el-table-column prop="email" label="邮箱" />
-            <el-table-column prop="address" label="地址" />
+            <el-table-column type="index" label="序号" width="80px"/>
+            <el-table-column prop="userName" label="学生名称" />
+            <el-table-column prop="testName" label="考试名称" />
+            <el-table-column prop="className" label="班级名称" />
+            <el-table-column prop="chineseTeacher.userName" label="语文老师" />
+            <el-table-column prop="mathTeacher.userName" label="数学老师" />
+            <el-table-column prop="englishTeacher.userName" label="英语老师" />
+
+            <el-table-column prop="chineseGrade" label="语文成绩" />
+            <el-table-column prop="mathGrade" label="数学成绩" />
+            <el-table-column prop="englishGrade" label="英语成绩" />
+            <!-- <el-table-column prop="englishGrade" label="平均语文成绩" />
+            <el-table-column prop="englishGrade" label="平均数学成绩" />
+            <el-table-column prop="englishGrade" label="平均英语成绩" /> -->
             <el-table-column fixed="right" label="操作">
                 <template #default="scope">
                     <el-button link type="primary" size="small" @click="edit(scope.row)">编辑</el-button>
@@ -105,8 +108,7 @@
         <el-form :model="form" ref="dialogForm" label-width="80px" size="large">
 
             <el-form-item label="用户名" prop="student.userName" required>
-                <el-input disabled 
-                v-model="form.student.userName" autocomplete="off">
+                <el-input disabled v-model="form.student.userName" autocomplete="off">
                     <template #append>
                         <el-button type="primary" @click="dialogStudentFormVisible = true">关联学生</el-button>
                     </template>
@@ -159,13 +161,12 @@
 
     <!-- 关联学生 -->
     <el-dialog v-model="dialogStudentFormVisible" title="关联学生">
-        <el-table :data="studentsTable" border empty empty-text="暂无数据" 
-        @current-change="handleCurrentChange"
-        >
-        <el-table-column width="80" label="序号">
+        <el-table :data="studentsTable" border empty empty-text="暂无数据"
+         @current-change="handleCurrentChange">
+            <el-table-column width="80" label="序号">
                 <template #default="scope">
                     <el-radio v-model="radio" :label="scope.row._id">
-                    {{scope.$index}}
+                        {{ scope.$index }}
                     </el-radio>
                 </template>
             </el-table-column>
@@ -191,7 +192,7 @@ import axios from "axios";
 import { reactive, ref, toRaw, watch } from "vue";
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { addGrades, search } from "@/axios/student";
+import { addGrades, searchGrades } from "@/axios/student";
 import { ElTable } from 'element-plus'
 import Mock from "mockjs"
 const ruleFormRef = ref<FormInstance>()
@@ -200,20 +201,20 @@ const dialogFormVisible = ref(false)
 const dialogStudentFormVisible = ref(false)
 
 
-const createForm = ()=>{
-  return ({
-    student: {
-        userName:"",
-        sex:"",
-        class:"",
-        _id:""
-    },
-    studentId:"",
-    testName:Mock.mock('@word(3, 5)'),
-    chineseGrade:Mock.mock('@integer(0, 100)'),
-    mathGrade:Mock.mock('@integer(0, 100)'),
-    englishGrade:Mock.mock('@integer(0, 100)'),
-  })  
+const createForm = () => {
+    return ({
+        student: {
+            userName: "",
+            sex: "",
+            class: "",
+            _id: ""
+        },
+        studentId: "",
+        testName: Mock.mock('@word(3, 5)'),
+        chineseGrade: Mock.mock('@integer(0, 100)'),
+        mathGrade: Mock.mock('@integer(0, 100)'),
+        englishGrade: Mock.mock('@integer(0, 100)'),
+    })
 }
 
 let form = reactive(createForm(),)
@@ -221,7 +222,7 @@ let form = reactive(createForm(),)
 const confirmConnect = () => {
     dialogStudentFormVisible.value = false
     form.student = currentRow.value
-    console.log(currentRow.value,"aa")
+    console.log(currentRow.value, "aa")
 }
 const studentsTable = ref([])
 axios.post("http://localhost:3000/students/search").then(res => {
@@ -230,10 +231,10 @@ axios.post("http://localhost:3000/students/search").then(res => {
 })
 
 const currentRow = ref()
-const handleCurrentChange = (val:any) => {
+const handleCurrentChange = (val: any) => {
     console.log(val)
-  currentRow.value = val
-  radio.value = val._id
+    currentRow.value = {...val}
+    radio.value = val._id
 }
 
 
@@ -343,7 +344,7 @@ const fetchUpdateStudent = () => {
 }
 
 const fetchAddStudent = () => {
-     form.studentId = form.student._id
+    form.studentId = form.student._id
     axios({
         method: "post",
         data: form,
@@ -367,16 +368,11 @@ watch(date, function (newVal) {
 })
 
 const fetchAllStudent = () => {
-
-    axios({
-        method: "post",
-        data: queryForm,
-        url: "http://localhost:3000/grades/search",
-    }).then(res => {
-        if (res.data.code == 200) {
+    searchGrades(queryForm).then((res: any) => {
+        if (res.code == 200) {
             const data = res.data
-        tableData.value = data.data;
-        count.value = data.count
+            tableData.value = data.data;
+            count.value = data.count
         }
     })
 }
@@ -408,6 +404,8 @@ const del = (row: any) => {
             })
         })
 }
+
+
 
 
 </script>

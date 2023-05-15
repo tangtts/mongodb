@@ -1,4 +1,3 @@
-import { search } from './../../../web/src/axios/student/index';
 import {
   Body,
   Controller,

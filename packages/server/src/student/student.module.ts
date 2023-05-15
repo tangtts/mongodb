@@ -13,7 +13,6 @@ import { GradesSchema } from './schema/grades.schema';
   imports: [
     MongooseModule.forFeature([
       { name: Student.name, schema: StudentSchema },
-      { name: Grade.name, schema: GradesSchema },
     ]),
   ],
   controllers: [StudentController],
