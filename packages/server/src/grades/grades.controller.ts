@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import { GradesService } from './grades.service';
 import { UpdateGradeDto } from './dto/update-grade.dto';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -25,5 +25,21 @@ export class GradesController {
   @Post("search")
   searchGrade(@Body() grades: SearchGradesDTO) {
     return this.gradesService.search(grades);
+  }
+
+  @ApiOperation({
+    summary: "查询成绩详情",
+  })
+  @Post("detail")
+  gradeDetail(@Query("id") id: string) {
+    return this.gradesService.detail(id);
+  }
+
+  @ApiOperation({
+    summary: "删除学生成绩",
+  })
+  @Get("remove")
+  delGrade(@Query("id") id: string) {
+    return this.gradesService.del(id);
   }
 }

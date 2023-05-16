@@ -31,8 +31,8 @@ export class GradesService {
     };
     //  studentId
     // 查找
-// 一个学生的 studentId -> 班级class->获取 className
-// 
+    // 一个学生的 studentId -> 班级class->获取 className
+    //
     let pipeline: PipelineStage[] = [
       { $match: query },
       {
@@ -61,7 +61,6 @@ export class GradesService {
                 $expr: { $eq: ["$className", "$$className"] },
               },
             },
-            
             {
               $lookup: {
                 from: "teachers",
@@ -107,8 +106,8 @@ export class GradesService {
         $project: {
           student: 0,
           classes: 0,
-          createdAt:0,
-          updatedAt:0,
+          createdAt: 0,
+          updatedAt: 0,
         },
       },
       {
@@ -124,11 +123,17 @@ export class GradesService {
       },
     ];
     let r = await this.gradeModel.aggregate(pipeline);
-    console.log(r);
     const count = await this.gradeModel.countDocuments(query);
     return {
       data: r,
       count,
     };
+  }
+
+  async del(id) {
+    await this.gradeModel.findByIdAndDelete(id);
+  }
+  async detail(id) {
+    // this.gradeModel.
   }
 }

@@ -63,7 +63,7 @@
         <el-row>
             <el-col>
                 <el-form-item>
-                    <el-button type="primary" @click="fetchAllStudent">查询</el-button>
+                    <el-button type="primary" @click="fetchAllStudentGrades">查询</el-button>
                     <el-button @click="reset">重置</el-button>
                 </el-form-item>
             </el-col>
@@ -78,7 +78,7 @@
         </template>
 
         <el-table :data="tableData" border empty empty-text="暂无数据">
-            <el-table-column type="index" label="序号" width="80px"/>
+            <el-table-column type="index" label="序号" width="80px" />
             <el-table-column prop="userName" label="学生名称" />
             <el-table-column prop="testName" label="考试名称" />
             <el-table-column prop="className" label="班级名称" />
@@ -101,7 +101,7 @@
         </el-table>
 
         <el-pagination class="mt-4" background layout="prev, pager, next" v-model:current-page="queryForm.currentPage"
-            v-model:page-size="queryForm.pageSize" @current-change="fetchAllStudent" :total="count" />
+            v-model:page-size="queryForm.pageSize" @current-change="fetchAllStudentGrades" :total="count" />
     </el-card>
 
     <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加学生成绩' : '修改学生成绩'">
@@ -161,8 +161,7 @@
 
     <!-- 关联学生 -->
     <el-dialog v-model="dialogStudentFormVisible" title="关联学生">
-        <el-table :data="studentsTable" border empty empty-text="暂无数据"
-         @current-change="handleCurrentChange">
+        <el-table :data="studentsTable" border empty empty-text="暂无数据" @current-change="handleCurrentChange">
             <el-table-column width="80" label="序号">
                 <template #default="scope">
                     <el-radio v-model="radio" :label="scope.row._id">
@@ -233,7 +232,7 @@ axios.post("http://localhost:3000/students/search").then(res => {
 const currentRow = ref()
 const handleCurrentChange = (val: any) => {
     console.log(val)
-    currentRow.value = {...val}
+    currentRow.value = { ...val }
     radio.value = val._id
 }
 
@@ -258,16 +257,10 @@ const gradesSelect = ref([
 
 const queryForm = reactive({
     userName: "",
-    sex: '1',
-    nation: "",
     class: "",
-    phoneNumber: "",
-    email: "",
-    address: "",
     pageSize: 2,
     currentPage: 1,
-    startTime: '',
-    endTime: ""
+    testName:""
 
 })
 const tableData = ref([])
@@ -336,7 +329,7 @@ const fetchUpdateStudent = () => {
     }).then(res => {
         if (res.data.code == 200) {
             dialogFormVisible.value = false;
-            fetchAllStudent()
+            fetchAllStudentGrades()
         } else {
             console.log(res.data.message.join(','))
         }
@@ -352,22 +345,14 @@ const fetchAddStudent = () => {
     }).then(res => {
         if (res.data.code == 200) {
             dialogFormVisible.value = false;
-            fetchAllStudent()
+            fetchAllStudentGrades()
         }
     })
 }
 
-watch(date, function (newVal) {
-    if (newVal) {
-        queryForm.startTime = newVal[0]
-        queryForm.endTime = newVal[1]
-    } else {
-        queryForm.startTime = ''
-        queryForm.endTime = ''
-    }
-})
 
-const fetchAllStudent = () => {
+
+const fetchAllStudentGrades = () => {
     searchGrades(queryForm).then((res: any) => {
         if (res.code == 200) {
             const data = res.data
@@ -376,14 +361,14 @@ const fetchAllStudent = () => {
         }
     })
 }
-fetchAllStudent()
+fetchAllStudentGrades()
 
 
 
 const reset = () => {
     if (!ruleFormRef.value) return
     ruleFormRef.value.resetFields()
-    fetchAllStudent()
+    fetchAllStudentGrades()
 }
 const del = (row: any) => {
     ElMessageBox.confirm(
@@ -398,9 +383,9 @@ const del = (row: any) => {
         .then(() => {
             axios({
                 method: "get",
-                url: `http://localhost:3000/students/remove?id=${row._id}`,
+                url: `http://localhost:3000/grades/remove?id=${row._id}`,
             }).then(res => {
-                fetchAllStudent()
+                fetchAllStudentGrades()
             })
         })
 }
