@@ -30,8 +30,9 @@ export class GradesController {
   @ApiOperation({
     summary: "查询成绩详情",
   })
-  @Post("detail")
+  @Get("detail")
   gradeDetail(@Query("id") id: string) {
+    console.log(id)
     return this.gradesService.detail(id);
   }
 
@@ -41,5 +42,13 @@ export class GradesController {
   @Get("remove")
   delGrade(@Query("id") id: string) {
     return this.gradesService.del(id);
+  }
+
+  @ApiOperation({
+    summary: "修改学生成绩",
+  })
+  @Post("update")
+  update(@Body() updateGradeDto: UpdateGradeDto) {
+    return this.gradesService.update(updateGradeDto);
   }
 }

@@ -13,3 +13,7 @@ export const addGrades  = (data:any)=>{
 export const searchGrades  = (data:any)=>{
     return post("grades/search",data)
 }
+
+export const updateGrades  = (data:any)=>{
+    return post("grades/update",data)
+}

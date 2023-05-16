@@ -1,6 +1,6 @@
 import { classes } from "src/commonData/classes";
 import { Student } from "./../student/schema/student.schema";
-import { PipelineStage } from "mongoose";
+import { PipelineStage, Types } from "mongoose";
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
@@ -8,6 +8,7 @@ import { CreateGradesDTO } from "./dto/create-grade.dto";
 import { SearchGradesDTO } from "./dto/search-grades.dto";
 import { UpdateGradeDto } from "./dto/update-grade.dto";
 import { Grade } from "./schemas/grade.schema";
+import { Schema } from "mongoose";
 @Injectable()
 export class GradesService {
   constructor(@InjectModel(Grade.name) private gradeModel: Model<Grade>) {}
@@ -134,6 +135,47 @@ export class GradesService {
     await this.gradeModel.findByIdAndDelete(id);
   }
   async detail(id) {
-    // this.gradeModel.
+    let r = await this.gradeModel.findById(id);
+    let pipeLine: PipelineStage[] = [
+      {
+        $match: {
+          _id: new Types.ObjectId(id),
+        },
+      },
+      {
+        $lookup: {
+          from: "students",
+          foreignField: "_id",
+          localField: "studentId",
+          as: "student",
+        },
+      },
+      {
+        $set: {
+          class: { $arrayElemAt: ["$student.class", 0] },
+          userName: { $arrayElemAt: ["$student.userName", 0] },
+          sex: { $arrayElemAt: ["$student.sex", 0] },
+        },
+      },
+      {
+        $project: {
+          student: 0,
+        },
+      },
+    ];
+    let s = await this.gradeModel.aggregate(pipeLine);
+    return s[0];
+  }
+  async update(updateGradeDto: UpdateGradeDto) {
+    let s = await this.gradeModel.findOneAndUpdate(
+      {
+        studentId: updateGradeDto.studentId,
+      },
+      {
+        $set: updateGradeDto,
+      },
+      { new: true }
+    );
+    return s;
   }
 }

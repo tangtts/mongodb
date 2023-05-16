@@ -107,8 +107,8 @@
     <el-dialog v-model="dialogFormVisible" :title="type == 'add' ? '添加学生成绩' : '修改学生成绩'">
         <el-form :model="form" ref="dialogForm" label-width="80px" size="large">
 
-            <el-form-item label="用户名" prop="student.userName" required>
-                <el-input disabled v-model="form.student.userName" autocomplete="off">
+            <el-form-item label="用户名" prop="userName" required>
+                <el-input disabled v-model="form.userName" autocomplete="off">
                     <template #append>
                         <el-button type="primary" @click="dialogStudentFormVisible = true">关联学生</el-button>
                     </template>
@@ -116,8 +116,8 @@
             </el-form-item>
 
             <!-- 自动带出来年级 -->
-            <el-form-item label="性别" prop="phoneNumber">
-                <el-select v-model="form.student.sex" placeholder="请选择性别" style="width:100%" disabled>
+            <el-form-item label="性别" prop="sex">
+                <el-select v-model="form.sex" placeholder="请选择性别" style="width:100%" disabled>
                     <el-option label="男" value="1" />
                     <el-option label="女" value="0" />
                 </el-select>
@@ -125,7 +125,7 @@
 
 
             <el-form-item prop="class" label="班级">
-                <el-select v-model="form.student.class" class="w-full" placeholder="请选择班级" disabled>
+                <el-select v-model="form.class" class="w-full" placeholder="请选择班级" disabled>
                     <el-option v-for="(className, index) of classes" :key="index" :label="className" :value="className">
                     </el-option>
                 </el-select>
@@ -191,7 +191,7 @@ import axios from "axios";
 import { reactive, ref, toRaw, watch } from "vue";
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { addGrades, searchGrades } from "@/axios/student";
+import { addGrades, searchGrades, updateGrades } from "@/axios/student";
 import { ElTable } from 'element-plus'
 import Mock from "mockjs"
 const ruleFormRef = ref<FormInstance>()
@@ -202,12 +202,15 @@ const dialogStudentFormVisible = ref(false)
 
 const createForm = () => {
     return ({
-        student: {
-            userName: "",
-            sex: "",
-            class: "",
-            _id: ""
-        },
+        // student: {
+        //     userName: "",
+        //     sex: "",
+        //     class: "",
+        //     _id: ""
+        // },
+        userName: "",
+        sex: "",
+        class: "",
         studentId: "",
         testName: Mock.mock('@word(3, 5)'),
         chineseGrade: Mock.mock('@integer(0, 100)'),
@@ -220,13 +223,18 @@ let form = reactive(createForm(),)
 
 const confirmConnect = () => {
     dialogStudentFormVisible.value = false
-    form.student = currentRow.value
-    console.log(currentRow.value, "aa")
+    form.userName = currentRow.value.userName
+    form.sex = currentRow.value.sex
+    form.class = currentRow.value.class
+    form.studentId = currentRow.value._id;
+
+    updateGrades(form).then(res => {
+        console.log(res)
+    })
 }
 const studentsTable = ref([])
 axios.post("http://localhost:3000/students/search").then(res => {
     studentsTable.value = res.data.data.data;
-
 })
 
 const currentRow = ref()
@@ -260,7 +268,7 @@ const queryForm = reactive({
     class: "",
     pageSize: 2,
     currentPage: 1,
-    testName:""
+    testName: ""
 
 })
 const tableData = ref([])
@@ -304,9 +312,10 @@ const edit = (row: any) => {
     type.value = 'edit';
     dialogForm.value?.resetFields()
     axios({
-        url: `http://localhost:3000/students/details?id=${row._id}`,
+        url: `http://localhost:3000/grades/detail?id=${row._id}`,
     }).then(res => {
         if (res.data.code == 200) {
+            console.log(res.data)
             Object.assign(form, res.data.data)
         }
     })
@@ -316,28 +325,24 @@ const confirm = () => {
     if (type.value == 'add') {
         fetchAddStudent()
     } else {
-        fetchUpdateStudent()
+        fetchUpdateGrades()
     }
 
 }
 
-const fetchUpdateStudent = () => {
-    axios({
-        method: "post",
-        data: form,
-        url: "http://localhost:3000/students/update",
-    }).then(res => {
-        if (res.data.code == 200) {
+const fetchUpdateGrades = () => {
+
+    updateGrades(form).then((res: any) => {
+        if (res.code == 200) {
             dialogFormVisible.value = false;
             fetchAllStudentGrades()
         } else {
-            console.log(res.data.message.join(','))
+            console.log(res.data.message)
         }
     })
 }
 
 const fetchAddStudent = () => {
-    form.studentId = form.student._id
     axios({
         method: "post",
         data: form,
